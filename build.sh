@@ -5,6 +5,9 @@ mkdir Binaries
 
 cd crypto-cpp
 
+git checkout -- .
+git clean -fd
+
 mkdir Headers
 cp src/starkware/crypto/ffi/*.h Headers/
 
