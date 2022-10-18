@@ -28,7 +28,7 @@ for (( i=0; i < $TargetsSize; i++ )); do
         export CMAKE_SYSTEM_PROCESSOR="x86_64"
     fi
     
-    sed -i'.original' "s^\${CMAKE_CXX_FLAGS} -std=c++17 -Werror -Wall -Wextra -fno-strict-aliasing -fPIC^\${CMAKE_CXX_FLAGS} -std=c++17 -Werror -Wall -Wextra -fno-strict-aliasing -fPIC -arch ${CMAKE_SYSTEM_PROCESSOR} -target ${Targets[i]} -sysroot ${SDKPath}^" CMakeLists.txt
+    sed -i'.original' "s^\${CMAKE_CXX_FLAGS} -std=c++17 -Werror -Wall -Wextra -fno-strict-aliasing -fPIC^\${CMAKE_CXX_FLAGS} -std=c++17 -Werror -Wall -Wextra -fno-strict-aliasing -fPIC -arch ${CMAKE_SYSTEM_PROCESSOR} -target ${Targets[i]} -isysroot ${SDKPath}^" CMakeLists.txt
     
     cat CMakeLists.txt
     
