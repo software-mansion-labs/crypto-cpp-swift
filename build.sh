@@ -1,11 +1,5 @@
 #!/bin/sh
 
-#  buildAllTargets.sh
-#  swift-crypto-cpp
-#
-#  Created by Bartosz Rybarski on 17/10/2022.
-#  
-
 rm -rf Binaries
 mkdir Binaries
 
