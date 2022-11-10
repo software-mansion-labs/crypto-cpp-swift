@@ -18,9 +18,6 @@ mkdir -p Binaries
 mkdir -p Headers
 
 pushd crypto-cpp
-echo $(pwd)
-
-# rm -r Build/
 
 targets_size=${#targets[@]}
 
@@ -46,7 +43,6 @@ for (( i=0; i < $targets_size; i++ )); do
 
   mkdir -p ../Binaries/${targets[i]}
   cp Build/${targets[i]}/src/starkware/crypto/ffi/libcrypto_c_exports.dylib ../Binaries/${targets[i]}/libcrypto.dylib
-
 done
 
 popd
