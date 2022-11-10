@@ -1,53 +1,65 @@
-#!/bin/sh
+#/usr/bin/env bash
 
-rm -rf Binaries
-mkdir Binaries
+ios_version="16.1"
 
-cd crypto-cpp
+targets=(
+  "arm64-apple-ios$ios_version"
+  "arm64-apple-ios$ios_version-simulator"
+  # "x86_64-apple-ios$ios_version-simulator"
+)
 
-git checkout -- .
-git clean -fd
+sdk_names=(
+  "iphoneos$ios_version"
+  "iphonesimulator$ios_version"
+  # "iphonesimulator$ios_version"
+)
 
-mkdir Headers
-cp src/starkware/crypto/ffi/*.h Headers/
+mkdir -p Binaries
+mkdir -p Headers
 
-Targets=('arm64-apple-ios15.5' 'x86_64-apple-ios15.2-simulator' 'arm64-apple-ios15.5-simulator')
+pushd crypto-cpp
+echo $(pwd)
 
-SDKs=('iphoneos15.5' 'iphonesimulator15.5' 'iphonesimulator15.5')
+# rm -r Build/
 
-TargetsSize=${#Targets[@]}
+targets_size=${#targets[@]}
 
-export CMAKE_CROSSCOMPILING="1"
-export CMAKE_CXX_COMPILER="clang++"
+for (( i=0; i < $targets_size; i++ )); do
+  mkdir -p Build/${targets[i]}
 
-for (( i=0; i < $TargetsSize; i++ )); do
-    SDKPath=$(xcrun --sdk "${SDKs[i]}" --show-sdk-path -f)
-    
-    if [[ "${Targets[i]}" == *"arm64"* ]]; then
-        echo "Compiling for arm64"
-        export CMAKE_SYSTEM_PROCESSOR="arm64"
-    else
-        echo "Compiling for x86_64"
-        export CMAKE_SYSTEM_PROCESSOR="x86_64"
-    fi
-    
-    sed -i'.original' "s^\${CMAKE_CXX_FLAGS} -std=c++17 -Werror -Wall -Wextra -fno-strict-aliasing -fPIC^\${CMAKE_CXX_FLAGS} -std=c++17 -Werror -Wall -Wextra -fno-strict-aliasing -fPIC -arch ${CMAKE_SYSTEM_PROCESSOR} -target ${Targets[i]} -isysroot ${SDKPath}^" CMakeLists.txt
-    
-    cat CMakeLists.txt
-    
-    rm -rf build
-    mkdir -p build/Release
-    
-    cd build/Release
-    cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER="${CMAKE_CXX_COMPILER}" -DCMAKE_CXX_FLAGS="-Wno-type-limits -Wno-range-loop-analysis -Wno-unused-parameter" ../..
-    cd ../..
-    
-    make -C build/Release
-    if [ $? -ne 0 ]; then exit 1; fi
-    
-    cp build/Release/src/starkware/crypto/ffi/libcrypto_c_exports.dylib ../Binaries/${Targets[i]}/libcrypto.dylib
+  pushd Build/${targets[i]}
+
+  flags="--sysroot $(xcrun --sdk ${sdk_names[i]} --show-sdk-path) -target ${targets[i]}"
+
+  cmake \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_CXX_FLAGS="${flags}" \
+    -DCMAKE_CROSSCOMPILING="1" \
+    -DCMAKE_C_COMPILER_WORKS="1" \
+    -DCMAKE_CXX_COMPILER_WORKS="1" \
+    -DCMAKE_SYSTEM_NAME="iOS" \
+    ../..
+
+  popd
+
+  make -C Build/${targets[i]}
+
+  mkdir -p ../Binaries/${targets[i]}
+  cp Build/${targets[i]}/src/starkware/crypto/ffi/libcrypto_c_exports.dylib ../Binaries/${targets[i]}/libcrypto.dylib
+
 done
 
-cd ../..
+popd
 
-xcodebuild -create-xcframework -library Binaries/arm64-apple-ios15.5/libcrypto.dylib -headers crypto-cpp/Headers -library Binaries/x86_64-apple-ios15.2-simulator/libcrypto.dylib -headers crypto-cpp/Headers -library Binaries/arm64-apple-ios15.5-simulator/libcrypto.dylib -headers crypto-cpp/Headers -output CCryptoCppStatic.xcframework
+cp crypto-cpp/src/starkware/crypto/ffi/*.h Headers
+
+build_command="xcodebuild -create-xcframework"
+
+for target in ${targets[*]}; do
+  build_command+=" -library Binaries/$target/libcrypto.dylib -headers Headers"
+done
+
+build_command+=" -output ccryptocpp.xcframework"
+
+rm -r ccryptocpp.xcframework
+eval $build_command
