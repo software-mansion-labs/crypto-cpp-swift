@@ -42,7 +42,7 @@ for (( i=0; i < $targets_size; i++ )); do
   make -C Build/${targets[i]}
 
   mkdir -p ../Binaries/${targets[i]}
-  cp Build/${targets[i]}/src/starkware/crypto/ffi/libcrypto_c_exports.dylib ../Binaries/${targets[i]}/libcrypto.dylib
+  cp Build/${targets[i]}/src/starkware/crypto/ffi/libcrypto_c_exports.dylib ../Binaries/${targets[i]}/libcrypto_c_exports.dylib
 done
 
 popd
@@ -53,7 +53,7 @@ cp crypto-cpp/src/starkware/crypto/ffi/{ecdsa.h,pedersen_hash.h} Headers
 build_command="xcodebuild -create-xcframework"
 
 for target in ${targets[*]}; do
-  build_command+=" -library Binaries/$target/libcrypto.dylib -headers Headers"
+  build_command+=" -library Binaries/$target/libcrypto_c_exports.dylib -headers Headers"
 done
 
 build_command+=" -output ccryptocpp.xcframework"
