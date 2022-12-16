@@ -1,3 +1,4 @@
 Binaries
 Headers
 *.xcframework
+.DS_Store
