@@ -1,18 +1,28 @@
-#/usr/bin/env bash
+#!/usr/bin/env bash
 
-ios_version="16.1"
+set -e
+set -x
+
+ios_version="16.0"
 
 targets=(
-  "arm64-apple-ios$ios_version"
-  "arm64-apple-ios$ios_version-simulator"
-  # "x86_64-apple-ios$ios_version-simulator"
+  #"arm64-apple-ios$ios_version"
+  #"arm64-apple-ios$ios_version-simulator"
+  "x86_64-apple-ios$ios_version-simulator"
 )
 
 sdk_names=(
-  "iphoneos$ios_version"
+  #"iphoneos$ios_version"
+  #"iphonesimulator$ios_version"
   "iphonesimulator$ios_version"
-  # "iphonesimulator$ios_version"
 )
+
+sdk_installed_version=$(xcrun --sdk iphoneos --show-sdk-platform-version)
+
+if [[ "$sdk_installed_version" != "${ios_version}" ]]; then
+  echo "xcodebuild error: SDK $ios_version cannot be located."
+  exit 1
+fi
 
 mkdir -p Binaries
 mkdir -p Headers
@@ -58,5 +68,5 @@ done
 
 build_command+=" -output ccryptocpp.xcframework"
 
-rm -r ccryptocpp.xcframework
+rm -r ccryptocpp.xcframework || true
 eval $build_command
