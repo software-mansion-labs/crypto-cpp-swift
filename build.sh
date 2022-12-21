@@ -3,7 +3,7 @@
 set -e
 set -x
 
-ios_version="16.0"
+ios_version=$(xcrun --sdk iphoneos --show-sdk-platform-version) # "16.0"
 
 targets=(
   #"arm64-apple-ios$ios_version"
@@ -17,12 +17,12 @@ sdk_names=(
   "iphonesimulator$ios_version"
 )
 
-sdk_installed_version=$(xcrun --sdk iphoneos --show-sdk-platform-version)
+#sdk_installed_version=$(xcrun --sdk iphoneos --show-sdk-platform-version)
 
-if [[ "$sdk_installed_version" != "${ios_version}" ]]; then
-  echo "xcodebuild error: SDK $ios_version cannot be located."
-  exit 1
-fi
+# if [[ "$sdk_installed_version" != "${ios_version}" ]]; then
+#   echo "xcodebuild error: SDK $ios_version cannot be located."
+#   exit 1
+# fi
 
 mkdir -p Binaries
 mkdir -p Headers
@@ -49,6 +49,7 @@ for (( i=0; i < $targets_size; i++ )); do
 
   popd
 
+#  CXXFLAGS="--isysroot $(xcrun --sdk ${sdk_names[i]} --show-sdk-path) -target ${targets[i]}" CFLAGS="--isysroot $(xcrun --sdk ${sdk_names[i]} --show-sdk-path) -target ${targets[i]}"  /Applications/Xcode.app/Contents/Developer/usr/bin/
   make -C Build/${targets[i]}
 
   mkdir -p ../Binaries/${targets[i]}
