@@ -12,3 +12,11 @@ jobs:
         - uses: actions/checkout@v3
           with:
             submodules: recursive
+        - name: Setup cmake
+          uses: jwlawson/actions-setup-cmake@4f73d30c2fc44a9466a3ed890fb8db7a7b554302
+          with:
+            cmake-version: '3.16.x'
+        - name: show version
+          run: uname -a && xcrun --sdk iphoneos --show-sdk-platform-version
+        - name: Build x64 lib
+          run: ./build.sh
