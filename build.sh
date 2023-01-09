@@ -1,20 +1,28 @@
 #/usr/bin/env bash
 
-ios_version="16.1"
+set -e
+
+ios_version=$(xcrun --sdk iphoneos --show-sdk-platform-version)
+macosx_version=$(xcrun --sdk macosx --show-sdk-platform-version)
 
 targets=(
   "arm64-apple-ios$ios_version"
   "arm64-apple-ios$ios_version-simulator"
   "x86_64-apple-ios$ios_version-simulator"
+  "arm64-apple-darwin$macosx_version"
+  "x86_64-apple-darwin$macosx_version"
 )
 
 sdk_names=(
   "iphoneos$ios_version"
   "iphonesimulator$ios_version"
   "iphonesimulator$ios_version"
+  "macosx$macosx_version"
+  "macosx$macosx_version"
 )
 
 mkdir -p Binaries
+mkdir -p FatBinaries
 mkdir -p Headers
 
 pushd crypto-cpp
@@ -28,6 +36,12 @@ for (( i=0; i < $targets_size; i++ )); do
 
   sdk_sysroot="$(xcrun --sdk ${sdk_names[i]} --show-sdk-path)"
 
+  system_name="iOS"
+
+  if [[ sdk_names[i] == macosx* ]]; then
+    system_name="Darwin"
+  fi
+
   flags="--sysroot $sdk_sysroot -target ${targets[i]}"
 
   cmake \
@@ -36,7 +50,7 @@ for (( i=0; i < $targets_size; i++ )); do
     -DCMAKE_CROSSCOMPILING="1" \
     -DCMAKE_C_COMPILER_WORKS="1" \
     -DCMAKE_CXX_COMPILER_WORKS="1" \
-    -DCMAKE_SYSTEM_NAME="iOS" \
+    -DCMAKE_SYSTEM_NAME="$system_name" \
     -DCMAKE_OSX_SYSROOT="$sdk_sysroot" \
     ../..
 
@@ -55,25 +69,32 @@ cp crypto-cpp/src/starkware/crypto/ffi/{ecdsa.h,pedersen_hash.h} Headers
 
 build_command="xcodebuild -create-xcframework"
 
-mkdir -p Binaries/ios
-mkdir -p Binaries/iossimulator
+mkdir -p FatBinaries/ios
+mkdir -p FatBinaries/iossimulator
+mkdir -p FatBinaries/macosx
 
 lipo -create \
   Binaries/${targets[0]}/libcrypto_c_exports.dylib \
-  -output Binaries/ios/libcrypto_c_exports.dylib
+  -output FatBinaries/ios/libcrypto_c_exports.dylib
 
 lipo -create  \
   Binaries/${targets[1]}/libcrypto_c_exports.dylib \
   Binaries/${targets[2]}/libcrypto_c_exports.dylib \
-  -output Binaries/iossimulator/libcrypto_c_exports.dylib
+  -output FatBinaries/iossimulator/libcrypto_c_exports.dylib
 
-output_binaries=(
+lipo -create \
+  Binaries/${targets[3]}/libcrypto_c_exports.dylib \
+  Binaries/${targets[4]}/libcrypto_c_exports.dylib \
+  -output FatBinaries/macosx/libcrypto_c_exports.dylib
+
+fat_binaries=(
   "ios"
   "iossimulator"
+  "macosx"
 )
 
-for target in ${output_binaries[*]}; do
-  build_command+=" -library Binaries/$target/libcrypto_c_exports.dylib -headers Headers"
+for binary in ${fat_binaries[*]}; do
+  build_command+=" -library FatBinaries/$binary/libcrypto_c_exports.dylib -headers Headers"
 done
 
 build_command+=" -output ccryptocpp.xcframework"

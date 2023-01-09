@@ -1,4 +1,5 @@
 Binaries
+FatBinaries
 Headers
 *.xcframework
 .DS_Store
