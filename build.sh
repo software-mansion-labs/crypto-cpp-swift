@@ -22,7 +22,6 @@ sdk_names=(
 )
 
 mkdir -p Binaries
-mkdir -p FatBinaries
 mkdir -p Headers
 
 pushd crypto-cpp
@@ -36,10 +35,10 @@ for (( i=0; i < $targets_size; i++ )); do
 
   sdk_sysroot="$(xcrun --sdk ${sdk_names[i]} --show-sdk-path)"
 
-  system_name="iOS"
-
   if [[ sdk_names[i] == macosx* ]]; then
-    system_name="Darwin"
+    system_name="Darwin";
+  else 
+    system_name="iOS";
   fi
 
   flags="--sysroot $sdk_sysroot -target ${targets[i]}"
@@ -69,31 +68,23 @@ cp crypto-cpp/src/starkware/crypto/ffi/{ecdsa.h,pedersen_hash.h} Headers
 
 build_command="xcodebuild -create-xcframework"
 
-mkdir -p FatBinaries/ios
-mkdir -p FatBinaries/iossimulator
-mkdir -p FatBinaries/macosx
+mkdir -p FatBinaries/{"${sdk_names[0]}","${sdk_names[1]}","${sdk_names[3]}"}
 
 lipo -create \
   Binaries/${targets[0]}/libcrypto_c_exports.dylib \
-  -output FatBinaries/ios/libcrypto_c_exports.dylib
+  -output FatBinaries/${sdk_names[0]}/libcrypto_c_exports.dylib
 
 lipo -create  \
   Binaries/${targets[1]}/libcrypto_c_exports.dylib \
   Binaries/${targets[2]}/libcrypto_c_exports.dylib \
-  -output FatBinaries/iossimulator/libcrypto_c_exports.dylib
+  -output FatBinaries/${sdk_names[1]}/libcrypto_c_exports.dylib
 
 lipo -create \
   Binaries/${targets[3]}/libcrypto_c_exports.dylib \
   Binaries/${targets[4]}/libcrypto_c_exports.dylib \
-  -output FatBinaries/macosx/libcrypto_c_exports.dylib
+  -output FatBinaries/${sdk_names[3]}/libcrypto_c_exports.dylib
 
-fat_binaries=(
-  "ios"
-  "iossimulator"
-  "macosx"
-)
-
-for binary in ${fat_binaries[*]}; do
+for binary in $(printf "%s\n" "${sdk_names[@]}" | sort -u); do
   build_command+=" -library FatBinaries/$binary/libcrypto_c_exports.dylib -headers Headers"
 done
 
