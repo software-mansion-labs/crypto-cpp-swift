@@ -5,6 +5,9 @@ set -e
 ios_version=$(xcrun --sdk iphoneos --show-sdk-platform-version)
 macosx_version=$(xcrun --sdk macosx --show-sdk-platform-version)
 
+# When changing targets or sdk_names array, make sure you update
+# indexes in fat binary creation at the end of the file.
+
 targets=(
   "arm64-apple-ios$ios_version"
   "arm64-apple-ios$ios_version-simulator"
@@ -67,6 +70,9 @@ rm Headers/*.h
 cp crypto-cpp/src/starkware/crypto/ffi/{ecdsa.h,pedersen_hash.h} Headers
 
 build_command="xcodebuild -create-xcframework"
+
+# Please note, that getting values from arrays below is fixed, so make sure to update
+# it when doing changes to targets or sdk_names arrays.
 
 mkdir -p FatBinaries/{"${sdk_names[0]}","${sdk_names[1]}","${sdk_names[3]}"}
 
