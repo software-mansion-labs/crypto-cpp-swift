@@ -66,7 +66,7 @@ done
 
 popd
 
-rm Headers/*.h
+rm Headers/*.h || true
 cp crypto-cpp/src/starkware/crypto/ffi/{ecdsa.h,pedersen_hash.h} Headers
 
 build_command="xcodebuild -create-xcframework"
