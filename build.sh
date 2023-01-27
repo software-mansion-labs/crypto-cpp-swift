@@ -74,24 +74,29 @@ build_command="xcodebuild -create-xcframework"
 # Please note, that getting values from arrays below is fixed, so make sure to update
 # it when doing changes to targets or sdk_names arrays.
 
-mkdir -p FatBinaries/{"${sdk_names[0]}","${sdk_names[1]}","${sdk_names[3]}"}
+mkdir -p Frameworks/{"${sdk_names[0]}/libcrypto_c_exports.framework","${sdk_names[1]}/libcrypto_c_exports.framework","${sdk_names[3]}/libcrypto_c_exports.framework"}
 
 lipo -create \
   Binaries/${targets[0]}/libcrypto_c_exports.dylib \
-  -output FatBinaries/${sdk_names[0]}/libcrypto_c_exports.dylib
+  -output Frameworks/${sdk_names[0]}/libcrypto_c_exports.framework/libcrypto_c_exports
 
 lipo -create  \
   Binaries/${targets[1]}/libcrypto_c_exports.dylib \
   Binaries/${targets[2]}/libcrypto_c_exports.dylib \
-  -output FatBinaries/${sdk_names[1]}/libcrypto_c_exports.dylib
+  -output Frameworks/${sdk_names[1]}/libcrypto_c_exports.framework/libcrypto_c_exports
 
 lipo -create \
   Binaries/${targets[3]}/libcrypto_c_exports.dylib \
   Binaries/${targets[4]}/libcrypto_c_exports.dylib \
-  -output FatBinaries/${sdk_names[3]}/libcrypto_c_exports.dylib
+  -output Frameworks/${sdk_names[3]}/libcrypto_c_exports.framework/libcrypto_c_exports
 
 for binary in $(printf "%s\n" "${sdk_names[@]}" | sort -u); do
-  build_command+=" -library FatBinaries/$binary/libcrypto_c_exports.dylib -headers Headers"
+  mkdir -p ./Frameworks/$binary/libcrypto_c_exports.framework/Headers
+
+  cp ./Headers/*.h ./Frameworks/$binary/libcrypto_c_exports.framework/Headers
+  cp ./Info.plist ./Frameworks/$binary/libcrypto_c_exports.framework/Info.plist
+
+  build_command+=" -framework Frameworks/$binary/libcrypto_c_exports.framework"
 done
 
 build_command+=" -output ccryptocpp.xcframework"
