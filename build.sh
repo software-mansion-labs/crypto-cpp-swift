@@ -91,6 +91,8 @@ lipo -create \
   -output Frameworks/${sdk_names[3]}/libcrypto_c_exports.framework/libcrypto_c_exports
 
 for binary in $(printf "%s\n" "${sdk_names[@]}" | sort -u); do
+  install_name_tool -id @rpath/libcrypto_c_exports.framework/libcrypto_c_exports ./Frameworks/$binary/libcrypto_c_exports.framework/libcrypto_c_exports
+
   mkdir -p ./Frameworks/$binary/libcrypto_c_exports.framework/Headers
 
   cp ./Headers/*.h ./Frameworks/$binary/libcrypto_c_exports.framework/Headers
