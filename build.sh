@@ -39,9 +39,9 @@ for (( i=0; i < $targets_size; i++ )); do
 
   pushd Build/${targets[i]}
 
-  sdk_sysroot="$(xcrun --sdk ${sdk_names[i]} --show-sdk-path)"
+  sdk_sysroot="$(xcrun --sdk "${sdk_names[i]}" --show-sdk-path)"
 
-  if [[ ${sdk_names[i]} == macosx* ]]; then
+  if [[ "${sdk_names[i]}" == macosx* ]]; then
     system_name="Darwin";
     min_version="$macosx_min_version";
   else 
@@ -50,7 +50,7 @@ for (( i=0; i < $targets_size; i++ )); do
   fi
 
   # Get the architecture prefix from the target triple
-  arch=$(echo ${targets[i]} | cut -d'-' -f 1)
+  arch=$(echo "${targets[i]}" | cut -d'-' -f 1)
 
   cmake \
     -DCMAKE_BUILD_TYPE=Release \
@@ -65,10 +65,10 @@ for (( i=0; i < $targets_size; i++ )); do
 
   popd
 
-  make -C Build/${targets[i]}
+  make -C "Build/${targets[i]}"
 
-  mkdir -p ../Binaries/${targets[i]}
-  cp Build/${targets[i]}/src/starkware/crypto/ffi/libcrypto_c_exports.dylib ../Binaries/${targets[i]}/libcrypto_c_exports.dylib
+  mkdir -p "../Binaries/${targets[i]}"
+  cp "Build/${targets[i]}/src/starkware/crypto/ffi/libcrypto_c_exports.dylib" "../Binaries/${targets[i]}/libcrypto_c_exports.dylib"
 done
 
 popd
@@ -84,36 +84,36 @@ build_command="xcodebuild -create-xcframework"
 mkdir -p Frameworks/{"${sdk_names[0]}/libcrypto_c_exports.framework","${sdk_names[1]}/libcrypto_c_exports.framework","${sdk_names[3]}/libcrypto_c_exports.framework"}
 
 lipo -create \
-  Binaries/${targets[0]}/libcrypto_c_exports.dylib \
-  -output Frameworks/${sdk_names[0]}/libcrypto_c_exports.framework/libcrypto_c_exports
+  "Binaries/${targets[0]}/libcrypto_c_exports.dylib" \
+  -output "Frameworks/${sdk_names[0]}/libcrypto_c_exports.framework/libcrypto_c_exports"
 
 lipo -create  \
-  Binaries/${targets[1]}/libcrypto_c_exports.dylib \
-  Binaries/${targets[2]}/libcrypto_c_exports.dylib \
-  -output Frameworks/${sdk_names[1]}/libcrypto_c_exports.framework/libcrypto_c_exports
+  "Binaries/${targets[1]}/libcrypto_c_exports.dylib" \
+  "Binaries/${targets[2]}/libcrypto_c_exports.dylib" \
+  -output "Frameworks/${sdk_names[1]}/libcrypto_c_exports.framework/libcrypto_c_exports"
 
 lipo -create \
-  Binaries/${targets[3]}/libcrypto_c_exports.dylib \
-  Binaries/${targets[4]}/libcrypto_c_exports.dylib \
-  -output Frameworks/${sdk_names[3]}/libcrypto_c_exports.framework/libcrypto_c_exports
+  "Binaries/${targets[3]}/libcrypto_c_exports.dylib" \
+  "Binaries/${targets[4]}/libcrypto_c_exports.dylib" \
+  -output "Frameworks/${sdk_names[3]}/libcrypto_c_exports.framework/libcrypto_c_exports"
 
 plist_cmd="/usr/libexec/PlistBuddy"
 
 for binary in $(printf "%s\n" "${sdk_names[@]}" | sort -u); do
-  install_name_tool -id @rpath/libcrypto_c_exports.framework/libcrypto_c_exports ./Frameworks/$binary/libcrypto_c_exports.framework/libcrypto_c_exports
+  install_name_tool -id @rpath/libcrypto_c_exports.framework/libcrypto_c_exports "./Frameworks/$binary/libcrypto_c_exports.framework/libcrypto_c_exports"
 
-  mkdir -p ./Frameworks/$binary/libcrypto_c_exports.framework/Headers
+  mkdir -p "./Frameworks/$binary/libcrypto_c_exports.framework/Headers"
 
-  cp ./Headers/*.h ./Frameworks/$binary/libcrypto_c_exports.framework/Headers
-  cp ./Info.plist ./Frameworks/$binary/libcrypto_c_exports.framework/Info.plist
+  cp ./Headers/*.h "./Frameworks/$binary/libcrypto_c_exports.framework/Headers"
+  cp ./Info.plist "./Frameworks/$binary/libcrypto_c_exports.framework/Info.plist"
 
-  if [[ binary == macosx* ]]; then
+  if [[ "${binary}" == macosx* ]]; then
     min_version="$macosx_min_version";
   else 
     min_version="$ios_min_version";
   fi
 
-  $plist_cmd -c "Add :MinimumOSVersion string $min_version" ./Frameworks/$binary/libcrypto_c_exports.framework/Info.plist
+  $plist_cmd -c "Add :MinimumOSVersion string $min_version" "./Frameworks/$binary/libcrypto_c_exports.framework/Info.plist"
 
   build_command+=" -framework Frameworks/$binary/libcrypto_c_exports.framework"
 done
