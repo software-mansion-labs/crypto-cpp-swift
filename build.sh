@@ -1,4 +1,4 @@
-#/usr/bin/env bash
+#!/usr/bin/env bash
 
 set -e
 
@@ -12,11 +12,11 @@ macosx_min_version="12.0"
 # indexes in fat binary creation at the end of the file.
 
 targets=(
-  "arm64-apple-ios$ios_version"
-  "arm64-apple-ios$ios_version-simulator"
-  "x86_64-apple-ios$ios_version-simulator"
-  "arm64-apple-darwin$macosx_version"
-  "x86_64-apple-darwin$macosx_version"
+  "arm64-apple-ios"
+  "arm64-apple-ios-simulator"
+  "x86_64-apple-ios-simulator"
+  "arm64-apple-darwin"
+  "x86_64-apple-darwin"
 )
 
 sdk_names=(
@@ -41,7 +41,7 @@ for (( i=0; i < $targets_size; i++ )); do
 
   sdk_sysroot="$(xcrun --sdk ${sdk_names[i]} --show-sdk-path)"
 
-  if [[ sdk_names[i] == macosx* ]]; then
+  if [[ ${sdk_names[i]} == macosx* ]]; then
     system_name="Darwin";
     min_version="$macosx_min_version";
   else 
@@ -54,7 +54,6 @@ for (( i=0; i < $targets_size; i++ )); do
 
   cmake \
     -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_CXX_FLAGS="${flags}" \
     -DCMAKE_CROSSCOMPILING="1" \
     -DCMAKE_C_COMPILER_WORKS="1" \
     -DCMAKE_CXX_COMPILER_WORKS="1" \
