@@ -30,14 +30,15 @@ sdk_names=(
 mkdir -p Binaries
 mkdir -p Headers
 
-pushd crypto-cpp
+pushd "$(dirname "$0")" || exit 1
+pushd crypto-cpp || exit 1
 
 targets_size=${#targets[@]}
 
-for (( i=0; i < $targets_size; i++ )); do
-  mkdir -p Build/${targets[i]}
+for (( i=0; i < targets_size; i++ )); do
+  mkdir -p "Build/${targets[i]}"
 
-  pushd Build/${targets[i]}
+  pushd "Build/${targets[i]}" || exit 1
 
   sdk_sysroot="$(xcrun --sdk "${sdk_names[i]}" --show-sdk-path)"
 
@@ -63,7 +64,7 @@ for (( i=0; i < $targets_size; i++ )); do
     -DCMAKE_OSX_DEPLOYMENT_TARGET="$min_version" \
     ../..
 
-  popd
+  popd || exit 1
 
   make -C "Build/${targets[i]}"
 
@@ -71,7 +72,7 @@ for (( i=0; i < $targets_size; i++ )); do
   cp "Build/${targets[i]}/src/starkware/crypto/ffi/libcrypto_c_exports.dylib" "../Binaries/${targets[i]}/libcrypto_c_exports.dylib"
 done
 
-popd
+popd || exit 1
 
 rm Headers/*.h || true
 cp crypto-cpp/src/starkware/crypto/ffi/{ecdsa.h,pedersen_hash.h} Headers
@@ -118,7 +119,18 @@ for binary in $(printf "%s\n" "${sdk_names[@]}" | sort -u); do
   build_command+=" -framework Frameworks/$binary/libcrypto_c_exports.framework"
 done
 
+rm -r ccryptocpp.xcframework || true
+
 build_command+=" -output ccryptocpp.xcframework"
 
-rm -r ccryptocpp.xcframework || true
-eval $build_command
+eval "$build_command"
+
+pushd crypto-cpp || exit 1
+git clean -dfx || true
+popd || exit 1
+
+rm -r Binaries || true
+rm -r Frameworks || true
+rm -r Headers || true
+
+popd || exit 0
